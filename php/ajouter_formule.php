@@ -1,29 +1,54 @@
 <?php
+
 session_start();
-header('Content-Type: application/json');
-
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'restaurateur') {
-    http_response_code(403);
-    echo json_encode(['success' => false, 'message' => 'Non autorisé']);
-    exit;
+if (!isset($_SESSION['utilisateur_id']) || $_SESSION['role'] !== 'Restaurateur') {
+    header("Location: /Projet_restoEtudiant/php/connexion.php");
+    exit();
 }
+?>
 
-require_once 'db_connect.php';
-$pdo = getPDO();
 
-$data = json_decode(file_get_contents('php://input'), true);
+<!DOCTYPE html>
+<html lang="fr">
 
-if (!isset($data['titre'], $data['description'], $data['prix'], $data['cuisine'])) {
-    echo json_encode(['success' => false, 'message' => 'Champs requis manquants']);
-    exit;
-}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ajouter une Formule</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
 
-$stmt = $pdo->prepare("INSERT INTO formule (titre, description, prix, cuisine, date_ajout) VALUES (?, ?, ?, ?, NOW())");
-$success = $stmt->execute([
-    $data['titre'],
-    $data['description'],
-    (float) $data['prix'],
-    $data['cuisine']
-]);
+<body>
+    <header>
+        <h2>Ajouter une Formule</h2>
+        <p>Veuillez remplir le formulaire ci-dessous pour ajouter un package de repas.</p>
+    </header>
+    <main>
+        <form method="post" action="traitement_ajout_formule.php" enctype="multipart/form-data">
+            <label for="nom">Nom :</label>
+            <input type="text" name="nom" id="nom" required>
 
-echo json_encode(['success' => $success]);
+            <label for="description">Description :</label>
+            <input type="text" name="description" id="description" required>
+
+            <label for="prix">Prix :</label>
+            <input type="number" name="prix" id="prix" step="0.01" required>
+
+            <label for="duree">Durée :</label>
+            <select name="duree" id="duree" required>
+                <option value="" disabled selected>--Sélectionner une durée--</option>
+                <option value="1 semaine">1 semaine</option>
+                <option value="2 semaines">2 semaines</option>
+                <option value="1 mois">1 mois</option>
+            </select>
+
+            <label for="image">Ajouter une image :</label>
+            <input type="file" name="image" id="image" accept="image/*">
+
+            <button type="submit">Ajouter la formule</button>
+            <button type="reset">Réinitialiser</button>
+        </form>
+    </main>
+</body>
+
+</html>

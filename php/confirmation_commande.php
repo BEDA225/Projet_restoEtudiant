@@ -43,7 +43,7 @@ $total = 0;
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<h1>🎉 Merci pour votre commande, <?= htmlspecialchars($user['prenom']) ?> !</h1>
+<h1>Merci pour votre commande, <?= htmlspecialchars($user['prenom']) ?> !</h1>
 <p>Commande n° <strong><?= htmlspecialchars($commandeId) ?></strong> passée le <?= date('d/m/Y H:i', strtotime($commande['date_commande'])) ?>.</p>
 <h2>Détails :</h2>
 <table>
@@ -62,6 +62,6 @@ $total = 0;
     <tr><td colspan="3"><strong>Total</strong></td><td><strong><?= number_format($total, 2) ?> $</strong></td></tr>
 </table>
 <br>
-<a href="../index.php">← Retour à l’accueil</a>
+<a href="../index.php">← Retour à l'accueil</a>
 </body>
 </html>

@@ -1,71 +1,113 @@
-// controller/inscription.js
-
-document.addEventListener('DOMContentLoaded', () => {
-    const form = document.getElementById('inscription-form');
+// Vérification AJAX de l'email
+function verifierEmail() {
+    const emailInput = document.getElementById('email');
     const messageDiv = document.getElementById('message');
-    const submitButton = document.getElementById('btn-inscription');
-
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        // Désactiver le bouton
-        submitButton.disabled = true;
-        submitButton.innerText = "En cours...";
-
-        messageDiv.style.color = 'black';
-        messageDiv.textContent = "Traitement de votre inscription...";
-
-        const formData = new FormData(form);
-
-        // Validation côté client
-        const email = formData.get('email').trim();
-        const password = formData.get('password');
-        const confirmPassword = formData.get('confirm_password');
-
-        if (!email || !password || password.length < 6) {
-            messageDiv.style.color = 'red';
-            messageDiv.textContent = "Veuillez entrer un email valide et un mot de passe d'au moins 6 caractères.";
-            resetButton();
-            return;
-        }
-
-        if (password !== confirmPassword) {
-            messageDiv.style.color = 'red';
-            messageDiv.textContent = "Les mots de passe ne correspondent pas.";
-            resetButton();
-            return;
-        }
-
-        try {
-            const response = await fetch('php/register.php', {
-                method: 'POST',
-                body: formData
-            });
-
-            const text = await response.text();
-            console.log("Réponse du serveur:", text);
-
-            if (response.ok && text.trim() === 'success') {
-                messageDiv.style.color = 'green';
-                messageDiv.textContent = "Inscription réussie ! Redirection en cours...";
-                setTimeout(() => {
-                    window.location.href = 'connexion.html';
-                }, 2000);
-            } else {
+    const email = emailInput.value.trim();
+    if (email.length < 5) {
+        messageDiv.textContent = '';
+        return;
+    }
+    fetch('api/verifier_email.php?email=' + encodeURIComponent(email))
+        .then(response => response.json())
+        .then(data => {
+            if (data.exists) {
+                messageDiv.textContent = "Cet email est déjà utilisé.";
                 messageDiv.style.color = 'red';
-                messageDiv.textContent = text.trim();
+            } else {
+                messageDiv.textContent = "Email disponible.";
+                messageDiv.style.color = 'green';
             }
-        } catch (error) {
-            console.error("Erreur lors de l'inscription:", error);
-            messageDiv.style.color = 'red';
-            messageDiv.textContent = "Erreur technique lors de l'inscription.";
-        } finally {
-            resetButton();
-        }
-    });
+        })
+        .catch(() => {
+            messageDiv.textContent = '';
+        });
+}
+function afficherChampsParRole() {
+    const role = document.getElementById("role").value;
+    const champsEtudiant = document.getElementById("ChampsEtudiant");
+    const champsRestaurateur = document.getElementById("ChampsRestaurateur");
 
-    function resetButton() {
-        submitButton.disabled = false;
-        submitButton.innerHTML = `<span class="material-icons">person_add</span> S'inscrire`;
+    // Desactive tous les champs requis
+    //champsEtudiant.querySelectorAll("input, select").forEach(etl => etl.required = false);
+    //champsRestaurateur.querySelectorAll("input, select").forEach(etl => etl.required = false);
+    // placeholder style none au debut
+    const nomInput = document.getElementById("nom");
+    nomInput.placeholder = "";
+
+    if (role === "Etudiant") {
+        champsEtudiant.style.display = "block";
+        champsRestaurateur.style.display = "none";
+        // afficher un placeholder pour le nom
+        const nomInput = document.getElementById("nom");
+        nomInput.placeholder = "Votre nom complet";
+        // Active les champs requis pour les étudiants
+        //champsEtudiant.querySelectorAll("input, select").forEach(etl => etl.required = true);
+    } else if (role === "Restaurateur") {
+        champsEtudiant.style.display = "none";
+        champsRestaurateur.style.display = "block";
+        // affichier un placeholder pour l'adresse
+        const nomInput = document.getElementById("nom");
+        nomInput.placeholder = "Le nom du restaurant";
+        // Active les champs requis pour les restaurateurs
+        //champsRestaurateur.querySelectorAll("input, select").forEach(etl => etl.required = true);
+    } else {
+        champsEtudiant.style.display = "none";
+        champsRestaurateur.style.display = "none";
+    }
+}
+
+function verifierEmail() {
+    const emailInput = document.getElementById('email');
+    const messageDiv = document.getElementById('message');
+    const email = emailInput.value.trim();
+    if (email.length < 5) {
+        messageDiv.textContent = '';
+        return;
+    }
+    fetch('api/verifier_email.php?email=' + encodeURIComponent(email))
+        .then(response => response.json())
+        .then(data => {
+            if (data.exists) {
+                messageDiv.textContent = "Cet email est déjà utilisé.";
+                messageDiv.style.color = 'red';
+            } else {
+                messageDiv.textContent = "";
+
+            }
+        })
+        .catch(() => {
+            messageDiv.textContent = '';
+        });
+}
+
+
+window.afficherChampsParRole = afficherChampsParRole;
+// Initialisation unique au chargement du DOM
+document.addEventListener("DOMContentLoaded", function () {
+    afficherChampsParRole();
+    // Activation/désactivation des champs communs selon le rôle
+    const champsCommuns = ['nom', 'email', 'telephone', 'motdepasse', 'motdepasse_confirm'];
+    const roleSelect = document.getElementById('role');
+    function activerChampsCommuns() {
+        const activer = roleSelect.value !== '';
+        champsCommuns.forEach(function (id) {
+            document.getElementById(id).disabled = !activer;
+        });
+    }
+    roleSelect.addEventListener('change', activerChampsCommuns);
+    activerChampsCommuns();
+});
+
+
+document.addEventListener('DOMContentLoaded', function () {
+    var roleSelect = document.getElementById('role');
+    var errorDiv = document.querySelector('div[style*="color:red"]');
+    if (roleSelect && errorDiv) {
+        roleSelect.addEventListener('change', function () {
+            if (roleSelect.value) {
+                errorDiv.style.display = 'none';
+            }
+        });
     }
 });
+

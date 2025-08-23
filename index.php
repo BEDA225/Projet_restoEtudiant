@@ -15,7 +15,7 @@ session_start();
 //print_r($_SESSION);
 //echo "</pre>";
 
-echo "Session ID: " . session_id();
+//echo "Session ID: " . session_id();
 if (!isset($_SESSION['user_id'])) {
     // Rediriger vers la page de connexion si pas connecté
     header("Location: /Projet_restoEtudiant/php/connexion.php");

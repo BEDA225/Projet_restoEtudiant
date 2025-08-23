@@ -1,128 +1,130 @@
 <?php
 session_start();
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'restaurateur') {
+if (!isset($_SESSION['utilisateur_id']) || $_SESSION['role'] !== 'Restaurateur') {
     header("Location: /Projet_restoEtudiant/php/connexion.php");
     exit();
 }
-require_once __DIR__ . '/php/db_connect.php';
-$pdo = getPDO();
 
-$stmt = $pdo->query("
-    SELECT c.id AS commande_id, c.date_commande, c.statut,
-           u.prenom, u.nom, u.email,
-           GROUP_CONCAT(CONCAT(f.titre, ' (x', cf.quantite, ')') SEPARATOR ', ') AS details_formules,
-           SUM(cf.quantite * f.prix) AS total_prix
-    FROM commande c
-    JOIN utilisateur u ON c.utilisateur_id = u.id
-    JOIN commande_formule cf ON cf.commande_id = c.id
-    JOIN formule f ON f.id = cf.formule_id
-    GROUP BY c.id
-    ORDER BY c.date_commande DESC
-");
-$commandes = $stmt->fetchAll(PDO::FETCH_ASSOC);
-$prix_total = array_sum(array_column($commandes,'total_prix'));
+require_once  './php/db_connect.php';
+$pdo = getPDO();
 ?>
-<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial‑scale=1.0"/>
-    <title>Dashboard Restaurateur</title>
-    <link rel="stylesheet" href="./styles.css"/>
-    <style>
-        /* styles simplifiés, responsive par flex/grid */
-        .controls { display:flex; gap:1em; margin-bottom:1em; }
-        .commande-card { border:1px solid #ccc; padding:1em; margin-bottom:1em; border-radius:5px; }
-        @media(max-width:600px){ .commande-card { font-size:0.9em; } }
-    </style>
-</head><body>
-<header><h1>Bienvenue, <?=htmlspecialchars($_SESSION['prenom'])?></h1></header>
-<main>
-    <div class="controls">
-        <label>Filtrer par statut :
-            <select id="filtre-statut">
-                <option value="">Tous</option>
-                <option value="en cours">En cours</option>
-                <option value="validée">Validée</option>
-                <option value="livrée">Livrée</option>
-                <option value="annulée">Annulée</option>
-            </select>
-        </label>
-        <p>Nb commandes : <span id="nb-cmd"><?=count($commandes)?></span></p>
-        <p>Revenu estimé : <strong><?=number_format($prix_total,2)?> $</strong></p>
-    </div>
-    <div id="liste-commandes">
-        <?php foreach($commandes as $c): ?>
-            <div class="commande-card" data-id="<?=$c['commande_id']?>" data-statut="<?=$c['statut']?>">
-                <p><strong>#<?=$c['commande_id']?></strong> – <?=htmlspecialchars($c['prenom']." ".$c['nom'])?> – <?=htmlspecialchars($c['date_commande'])?></p>
-                <p><em><?=htmlspecialchars($c['details_formules'])?></em></p>
-                <p>Statut :
-                    <select class="select-statut">
-                        <?php foreach(['en cours','validée','livrée','annulée'] as $s): ?>
-                            <option value="<?=$s?>" <?=$c['statut']==$s?'selected':''?>><?=ucfirst($s)?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </p>
-                <button class="btn-maj-statut">Mettre à jour</button>
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial‑scale=1.0" />
+    <title>Tableau de Bord Restaurateur</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+</head>
+
+<body>
+    <header>
+        <h2>Bienvenue, <?= htmlspecialchars($_SESSION['nom']) ?></h2>
+    </header>
+    <main>
+        <div class="leftbar">
+            <h1 class="logo">RestoEtudiant</h1>
+            <div class="leftbar-menu">
+                <a href="#dashboard-stat">Accueil</a>
+                <a href="php/gestion_plats_restaurateur.php">Gestion des plats</a>
+                <a href="php/gestion_commandes_restaurateur.php">Gestion des Commandes</a>
+                <a href="php/statistiques_restaurateur.php">Statistiques</a>
+                <a href="php/profil_restaurateur.php">Profil</a>
+                <a href="php/deconnexion.php">Déconnexion</a>
             </div>
-        <?php endforeach; ?>
-    </div>
-</main>
-<script>
-    window.role = "restaurateur";
-    const autoRefreshInterval = 30000;
-    function applyFiltre() {
-        const val = document.getElementById('filtre-statut').value;
-        document.querySelectorAll('.commande-card').forEach(card => {
-            card.style.display = (!val || card.dataset.statut === val) ? '' : 'none';
-        });
-    }
-    document.getElementById('filtre-statut').addEventListener('change', applyFiltre);
-    function attachUpdateButtons(){
-        document.querySelectorAll('.btn-maj-statut').forEach(btn => {
-            btn.onclick = async ()=> {
-                const card = btn.closest('.commande-card');
-                const id = card.dataset.id, statut = card.querySelector('.select-statut').value;
-                const resp = await fetch('/Projet_restoEtudiant/php/maj_statut_commande.php',{
-                    method:'POST', headers: {'Content-Type':'application/json'},
-                    body: JSON.stringify({commande_id:id, statut})
-                });
-                const data = await resp.json();
-                if (data.success) {
-                    card.dataset.statut = statut;
-                    alert('Statut mis à jour');
-                    applyFiltre();
-                } else {
-                    alert('Erreur : '+(data.message||''));
-                }
-            };
-        });
-    }
-    attachUpdateButtons();
-    // auto-refresh des commandes
-    setInterval(()=> {
-        fetch('/Projet_restoEtudiant/api/get_commandes.php')
-            .then(r=>r.json())
-            .then(data => {
-                if(data.commandes){
-                    const list = document.getElementById('liste-commandes');
-                    list.innerHTML = '';
-                    data.commandes.forEach(c=> {
-                        const div = document.createElement('div');
-                        div.className='commande-card';
-                        div.dataset.id=c.id; div.dataset.statut=c.statut;
-                        div.innerHTML=`<p><strong>#${c.id}</strong> – ${c.nomEtudiant} – ${c.date_commande}</p>
-            <p><em>${c.plats.map(p=>`${p.nom} (x${p.quantite})`).join(', ')}</em></p>
-            <p>Statut :
-              <select class="select-statut">
-                ${['en cours','validée','livrée','annulée'].map(s=>
-                            `<option value="${s}" ${c.statut===s?'selected':''}>${s.charAt(0).toUpperCase()+s.slice(1)}</option>`).join('')}
-              </select>
-            </p>
-            <button class="btn-maj-statut">Mettre à jour</button>`;
-                        list.appendChild(div);
-                    });
-                    document.getElementById('nb-cmd').textContent = data.commandes.length;
-                    attachUpdateButtons();
-                    applyFiltre();
-                }
-            });
-    }, autoRefreshInterval);
-</script>
-</body></html>
+        </div>
+
+        <div class="main">
+            <section class="dashboard-stat" id="dashboard-stat">
+                <h2>Vue d'ensemble de votre activité</h2>
+
+                <div class="stat-card">
+                    <h3>Statistiques</h3>
+                    <span class="material-icons">shopping_cart</span>
+                    <div class="stat-titre">Commandes du jour</div>
+                    <div class="stat-valeur">
+                        <?php
+                        $stmt = $pdo->prepare("
+                                SELECT COUNT(*) FROM commande
+                                WHERE utilisateur_id = :utilisateur_id
+                                AND DATE(date_commande) = CURDATE()
+                            ");
+                        $stmt->execute(['utilisateur_id' => $_SESSION['utilisateur_id']]);
+                        $commandes = $stmt->fetchColumn();
+                        echo $commandes;
+                        ?>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <h3>Chiffres d'affaires du jour</h3>
+                    <span class="material-icons">attach_money</span>
+                    <div class="stat-titre">Revenu du jour</div>
+                    <div class="stat-valeur">
+                        <?php
+                        $prix_total = 0.00;
+                        $stmt = $pdo->prepare("
+                            SELECT SUM(cf.quantite * f.prix) AS total
+                            FROM commande c
+                            JOIN commande_formule cf ON c.id = cf.commande_id
+                            JOIN formule f ON cf.formule_id = f.id
+                            WHERE f.utilisateur_id = :restaurateur_id
+                            AND DATE(c.date_commande) = CURDATE()
+                        ");
+                        $stmt->execute(['restaurateur_id' => $_SESSION['utilisateur_id']]);
+                        $prix_total = $stmt->fetchColumn() ?: 0;
+                        echo number_format($prix_total, 2) . " $";
+                        ?>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <h3>Les plats les plus vendus </h3>
+                    <span class="material-icons">restaurant_menu</span>
+                    <div class="stat-titre">Plats populaires</div>
+                    <div class="stat-valeur">
+
+                        <!-- Liste des plats populaires gerer avec php pour que sa soit uniquement
+                     les plats du restaurautareur connect et non tous les plats -->
+                        <?php
+                        // doit prendre en compte tous les plats du restaurateur depuis son inscription
+                        // a aujourd'hui 
+
+                        ?>
+
+                    </div>
+                </div>
+
+            </section>
+
+            <section class="tous-les-plats">
+                <h2>Tous les plats</h2>
+                <div class="plat-list">
+                    <?php
+                    // récupérer tous les plats du restaurateur
+                    $stmt = $pdo->prepare("
+                        SELECT f.id, f.titre, f.prix
+                        FROM formule f
+                        JOIN utilisateur u ON f.utilisateur_id = u.id
+                        WHERE u.id = :utilisateur_id
+                    ");
+                    $stmt->execute(['utilisateur_id' => $_SESSION['utilisateur_id']]);
+                    $plats = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                    foreach ($plats as $plat) {
+                        echo "<div class='plat-item'>";
+                        echo "<h3>" . htmlspecialchars($plat['titre']) . "</h3>";
+                        echo "<p>Prix: " . number_format($plat['prix'], 2) . " $</p>";
+                        echo "</div>";
+                    }
+                    ?>
+                </div>
+            </section>
+
+        </div>
+
+    </main>
+
+</body>
+
+</html>

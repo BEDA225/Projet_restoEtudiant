@@ -21,53 +21,9 @@ SET time_zone = "+00:00";
 -- Database: `restoetudiantdb`
 --
 
--- --------------------------------------------------------
+CREATE DATABASE IF NOT EXISTS restoetudiantdb DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+USE restoetudiantdb;
 
---
--- Table structure for table `commande`
---
-
-DROP TABLE IF EXISTS `commande`;
-CREATE TABLE IF NOT EXISTS `commande` (
-                                          `id` int NOT NULL AUTO_INCREMENT,
-                                          `utilisateur_id` int NOT NULL,
-                                          `date_commande` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-                                          `statut` enum('en cours','validée','livrée','annulée') DEFAULT 'en cours',
-                                          PRIMARY KEY (`id`),
-                                          KEY `utilisateur_id` (`utilisateur_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `commande_formule`
---
-
-DROP TABLE IF EXISTS `commande_formule`;
-CREATE TABLE IF NOT EXISTS `commande_formule` (
-                                                  `commande_id` int NOT NULL,
-                                                  `formule_id` int NOT NULL,
-                                                  `quantite` int DEFAULT '1',
-                                                  PRIMARY KEY (`commande_id`,`formule_id`),
-                                                  KEY `formule_id` (`formule_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `formule`
---
-
-DROP TABLE IF EXISTS `formule`;
-CREATE TABLE IF NOT EXISTS `formule` (
-                                         `id` int NOT NULL AUTO_INCREMENT,
-                                         `titre` varchar(100) NOT NULL,
-                                         `description` text,
-                                         `prix` decimal(6,2) NOT NULL,
-                                         `cuisine` varchar(100) DEFAULT NULL,
-                                         `date_ajout` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-                                         PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -75,54 +31,132 @@ CREATE TABLE IF NOT EXISTS `formule` (
 -- Table structure for table `utilisateur`
 --
 
-DROP TABLE IF EXISTS `utilisateur`;
-CREATE TABLE IF NOT EXISTS `utilisateur` (
-                                             `id` int NOT NULL AUTO_INCREMENT,
-                                             `nom` varchar(100) NOT NULL,
-                                             `prenom` varchar(100) NOT NULL,
-                                             `email` varchar(150) NOT NULL,
-                                             `motdepasse` varchar(255) NOT NULL,
-                                             `universite` varchar(150) DEFAULT NULL,
-                                             `annee_academique` varchar(20) DEFAULT NULL,
-                                             `carte_scolaire` varchar(100) DEFAULT NULL,
-                                             `role` enum('Etudiant','Restaurateur') NOT NULL DEFAULT 'Etudiant',
-                                             `date_creation` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-                                             PRIMARY KEY (`id`),
-                                             UNIQUE KEY `email` (`email`)
-) ENGINE=MyISAM AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+CREATE TABLE IF NOT EXISTS utilisateur (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nom VARCHAR(100) NOT NULL,
+    email VARCHAR(150) NOT NULL UNIQUE,
+    telephone VARCHAR(20) DEFAULT NULL,
+    motdepasse VARCHAR(255) NOT NULL,
+    role ENUM('Etudiant','Restaurateur') NOT NULL DEFAULT 'Etudiant',
+    date_creation TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- -----------------
+-- AJOUT 2 NOUVELLES TABLES ---
+-- creer une nouvelle table pour enregistrer les etudiants
+-- code_etudiant sert a stocker le code unique des etudiants
+CREATE TABLE IF NOT EXISTS etudiants (
+    utilisateur_id INT PRIMARY KEY,
+    universite VARCHAR(150),
+    annee_academique VARCHAR(20),
+    numeroEtudiant VARCHAR(100) NOT NULL UNIQUE,
+    code_etudiant VARCHAR(50) NOT NULL UNIQUE,
+    FOREIGN KEY (utilisateur_id) REFERENCES utilisateur(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
+-- creer une nouvelle table pour les restaurateurs 
+-- code_restaurateur sert a stocker le code unique des restaurateurs
+CREATE TABLE IF NOT EXISTS restaurateurs (
+    utilisateur_id INT PRIMARY KEY,
+    adresse VARCHAR(255) NOT NULL,
+    cuisine VARCHAR(100) NOT NULL,
+    code_restaurateur VARCHAR(50) NOT NULL UNIQUE,
+    FOREIGN KEY (utilisateur_id) REFERENCES utilisateur(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `utilisateur`
 --
 
-INSERT INTO `utilisateur` (`id`, `nom`, `prenom`, `email`, `motdepasse`, `universite`, `annee_academique`, `carte_scolaire`, `role`, `date_creation`) VALUES
-                                                                                                                                                          (6, 'Beda', 'Eric', 'eric@gmail.com', '$2y$10$IJ/bdsL9h3gjYwsTRm3SrOzAuX.DG37RMu.KsVCoAw7pUMlGF7HNC', 'Montreal', '2024', '123456789', 'Etudiant', '2025-07-14 01:58:31'),
-                                                                                                                                                          (5, 'Sehboub', 'Mourad', 'mouradmaths17@gmail.com', '$2y$10$fuq3rqPuTziLisgYQAOx.eFSSoSBeCg7HYpERysoF04jqefjFw9xq', 'Montreal', '2002', '123456', 'Restaurateur', '2025-07-14 01:39:51');
-COMMIT;
+INSERT INTO `utilisateur` (`id`, `nom`, `email`, `telephone`, `motdepasse`, `role`, `date_creation`) VALUES
+(1, 'Beda Eric', 'eric@gmail.com', '5147894562', '$2y$10$IJ/bdsL9h3gjYwsTRm3SrOzAuX.DG37RMu.KsVCoAw7pUMlGF7HNC', 'Etudiant', '2025-07-14 01:58:31'),
+(2, 'Sehboub Mourad', 'mouradmaths17@gmail.com', '5148987654', '$2y$10$fuq3rqPuTziLisgYQAOx.eFSSoSBeCg7HYpERysoF04jqefjFw9xq', 'Restaurateur', '2025-07-14 01:39:51');
+
+-- Insertion pour la table etudiants (pour l'utilisateur id=6)
+INSERT INTO `etudiants` (`utilisateur_id`, `universite`, `annee_academique`, `numeroEtudiant`, `code_etudiant`) VALUES
+(1, 'College Lasalle', '2024-2025', '249985', 'EtuCls123456789');
+
+-- Insertion pour la table restaurateurs (pour l'utilisateur id=5)
+INSERT INTO `restaurateurs` (`utilisateur_id`, `cuisine`, `code_restaurateur`) VALUES
+(2, 'Cuisine Algerienne', 'ResAlg001');
+
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `formule`
+--
+
+CREATE TABLE IF NOT EXISTS formule (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    utilisateur_id INT NOT NULL,
+    nom VARCHAR(100) NOT NULL,
+    description TEXT,
+    prix DECIMAL(6,2) NOT NULL,
+    duree ENUM('1 semaine','2 semaines','1 mois') NOT NULL,
+    date_ajout TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (utilisateur_id) REFERENCES utilisateur(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+-- --------------------------------------------------------
+-- Table structure for table `plat`
+
+CREATE TABLE IF NOT EXISTS plat (
+    id INT NOT NULL AUTO_INCREMENT,
+    utilisateur_id INT NOT NULL,
+    nom VARCHAR(100) NOT NULL,
+    description TEXT,
+    prix DECIMAL(6,2) NOT NULL,
+    image VARCHAR(255) DEFAULT NULL,
+    date_ajout TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    disponible TINYINT(1) DEFAULT 1,
+    PRIMARY KEY (id),
+    KEY utilisateur_id (utilisateur_id),
+    CONSTRAINT fk_plat_utilisateur FOREIGN KEY (utilisateur_id) REFERENCES utilisateur(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
--- a rajouter
-CREATE TABLE commandes (
-                           id INT AUTO_INCREMENT PRIMARY KEY,
-                           user_id INT NOT NULL,
-                           date_commande DATETIME NOT NULL,
-                           statut VARCHAR(50) DEFAULT 'en attente',
+----------------------------------------------------------
 
-                           FOREIGN KEY (user_id) REFERENCES utilisateur(id)
-);
+-- Table structure for table `formule_plat`
 
-CREATE TABLE commande_items (
-                                id INT AUTO_INCREMENT PRIMARY KEY,
-                                commande_id INT NOT NULL,
-                                formule_id INT NOT NULL,
-                                quantite INT NOT NULL,
-                                prix DECIMAL(10, 2) NOT NULL,
+CREATE TABLE IF NOT EXISTS formule_plat (
+    formule_id INT NOT NULL,
+    plat_id INT NOT NULL,
+    quantite INT DEFAULT 1,
+    PRIMARY KEY (formule_id, plat_id),
+    FOREIGN KEY (formule_id) REFERENCES formule(id),
+    FOREIGN KEY (plat_id) REFERENCES plat(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-                                FOREIGN KEY (commande_id) REFERENCES commandes(id),
-                                FOREIGN KEY (formule_id) REFERENCES formule(id)
-);
+-- Table structure for table `commande`
+
+CREATE TABLE IF NOT EXISTS commande (
+    id INT NOT NULL AUTO_INCREMENT,
+    utilisateur_id INT NOT NULL,
+    date_commande TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    statut ENUM('en attente','validée','livrée','annulée') DEFAULT 'en attente',
+    PRIMARY KEY (id),
+    KEY utilisateur_id (utilisateur_id),
+    CONSTRAINT fk_commande_utilisateur FOREIGN KEY (utilisateur_id) REFERENCES utilisateur(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
+-- --------------------------------------------------------
+-- Table structure for table `commande_formule`
+--
+
+CREATE TABLE IF NOT EXISTS commande_formule (
+    commande_id INT NOT NULL,
+    formule_id INT NOT NULL,
+    quantite INT DEFAULT '1',
+    PRIMARY KEY (commande_id, formule_id),
+    KEY formule_id (formule_id),
+    CONSTRAINT fk_commande_formule_commande FOREIGN KEY (commande_id) REFERENCES commande(id),
+    CONSTRAINT fk_commande_formule_formule FOREIGN KEY (formule_id) REFERENCES formule(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+

@@ -1,10 +1,15 @@
 <?php
-// 🔐 Configuration de la session
+// Affichage des erreurs pour le debug (à retirer en production)
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+// Configuration de la session
 session_set_cookie_params([
     'lifetime' => 0,
     'path' => '/',
     'domain' => '',
-    'secure' => false, // 🔁 à mettre true si HTTPS
+    'secure' => false, // à mettre true si HTTPS
     'httponly' => true,
     'samesite' => 'Lax'
 ]);
@@ -13,12 +18,14 @@ session_start();
 require_once __DIR__ . '/db_connect.php';
 $pdo = getPDO();
 
-// 🔎 Récupération des données du formulaire
+// Récupération des données du formulaire
 $email = $_POST['email'] ?? '';
-$motdepasse = $_POST['password'] ?? '';
-$role = ucfirst(strtolower($_POST['role'] ?? 'etudiant'));  // Format : Etudiant ou Restaurateur
+$motdepasse = $_POST['motdepasse'] ?? '';
+$role = $_POST['role'] ?? 'Etudiant';
+// Harmonise la casse du rôle pour correspondre à la base
+$role = ucfirst(strtolower($role));
 
-// 🔍 Recherche de l'utilisateur
+// Recherche de l'utilisateur
 $sql = "SELECT * FROM utilisateur WHERE email = :email AND role = :role LIMIT 1";
 $stmt = $pdo->prepare($sql);
 $stmt->bindParam(':email', $email);
@@ -26,28 +33,38 @@ $stmt->bindParam(':role', $role);
 $stmt->execute();
 $utilisateur = $stmt->fetch(PDO::FETCH_ASSOC);
 
-// 🛡 Vérification du mot de passe
-if ($utilisateur && password_verify($motdepasse, $utilisateur['motdepasse'])) {
-    // 🟢 Authentification réussie
-    $_SESSION['user_id'] = $utilisateur['id'];
-    $_SESSION['prenom'] = $utilisateur['prenom'];
-    $_SESSION['nom'] = $utilisateur['nom'];
-    $_SESSION['email'] = $utilisateur['email'];
-    $_SESSION['role'] = strtolower($utilisateur['role']);
+if (!$utilisateur) {
+    $_SESSION['login_error'] = true;
+    $_SESSION['debug'] = "Aucun utilisateur trouvé avec cet email et ce rôle.";
+    $role_url = urlencode($role);
+    header("Location: /Projet_restoEtudiant/php/connexion.php?role={$role_url}&error=1");
+    exit();
+}
 
-    // 🔁 Redirection selon rôle
-    if ($_SESSION['role'] === 'etudiant') {
+// Vérification du mot de passe
+// Juste avant la redirection, ajoute :
+if (password_verify($motdepasse, $utilisateur['motdepasse'])) {
+    $_SESSION['utilisateur_id'] = $utilisateur['id'];
+    $_SESSION['nom'] = $utilisateur['nom'] ?? '';
+    $_SESSION['email'] = $utilisateur['email'];
+    $_SESSION['role'] = $utilisateur['role'];
+
+    // Redirection selon rôle
+    if ($_SESSION['role'] === 'Etudiant') {
         header("Location: /Projet_restoEtudiant/dashboard_gestion_formules.php");
-    } elseif ($_SESSION['role'] === 'restaurateur') {
+        exit();
+    } elseif ($_SESSION['role'] === 'Restaurateur') {
         header("Location: /Projet_restoEtudiant/dashboard_restaurateur.php");
+        exit();
     } else {
         header("Location: /Projet_restoEtudiant/php/connexion.php?error=role_invalide");
+        exit();
     }
-    exit();
 } else {
-    // 🔴 Échec de connexion
+    // Échec de connexion (mauvais mot de passe)
     $_SESSION['login_error'] = true;
-    $role_url = urlencode(strtolower($role));
+    $_SESSION['debug'] = "Mot de passe incorrect.";
+    $role_url = urlencode($role);
     header("Location: /Projet_restoEtudiant/php/connexion.php?role={$role_url}&error=1");
     exit();
 }
