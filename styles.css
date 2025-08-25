@@ -988,7 +988,7 @@ form button:hover {
     background-color: #005f56;
 }
 
-//* Style pour le bouton de fermeture de la popup */
+/* Style pour le bouton de fermeture de la popup */
 .popup-close {
     position: absolute;
     top: 10px;
@@ -1003,7 +1003,7 @@ form button:hover {
     color: #00796b;
 }
 
-//**** styles pour ajouter un plat partie restaurant */
+/**** styles pour ajouter un plat partie restaurant */
 
 body {
     font-family: Arial, sans-serif;
@@ -1196,8 +1196,33 @@ footer {
 
 
 
+/* Stytes de gestion_formule */
 
-
-
-
-
+.cartes-formules {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    margin-top: 30px;
+}
+.carte-formule {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    padding: 20px;
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+}
+.carte-formule h3 {
+    margin: 0 0 10px 0;
+    color: #00796b;
+}
+.carte-formule a {
+    color: #00796b;
+    margin-right: 10px;
+    text-decoration: none;
+}
+.carte-formule a:hover {
+    text-decoration: underline;
+}

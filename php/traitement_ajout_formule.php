@@ -37,8 +37,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $stmt = $pdo->prepare("INSERT INTO formule (utilisateur_id, nom, description, prix, duree, image) VALUES (?, ?, ?, ?, ?, ?)");
     $stmt->execute([$utilisateur_id, $nom, $description, $prix, $duree, $imagePath]);
 
-    echo "<p>Formule ajoutée avec succès !</p>";
-}
-else {
+    $_SESSION['message'] = "Formule ajoutée avec succès !";
+    header("Location: gestion_formule_restaurateur.php");
+    exit();
+} else {
     echo "<p>Méthode de requête non supportée.</p>";
 }

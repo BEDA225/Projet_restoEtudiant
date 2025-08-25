@@ -29,6 +29,7 @@ $pdo = getPDO();
             <div class="leftbar-menu">
                 <a href="#dashboard-stat">Accueil</a>
                 <a href="php/gestion_plats_restaurateur.php">Gestion des plats</a>
+                <a href="php/gestion_formule_restaurateur.php">Gestion des Formules</a>
                 <a href="php/gestion_commandes_restaurateur.php">Gestion des Commandes</a>
                 <a href="php/statistiques_restaurateur.php">Statistiques</a>
                 <a href="php/profil_restaurateur.php">Profil</a>

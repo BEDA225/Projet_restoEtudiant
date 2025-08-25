@@ -2,14 +2,13 @@
 session_start();
 header('Content-Type: application/json');
 
-if (!isset($_SESSION['utilisateur_id']) || $_SESSION['role'] !== 'Restaurateur') {
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'restaurateur') {
     http_response_code(403);
     echo json_encode(['success' => false, 'message' => 'Non autorisé']);
     exit;
 }
 
 require_once 'db_connect.php';
-require_once 'db_utils.php';
 $pdo = getPDO();
 
 $data = json_decode(file_get_contents('php://input'), true);
@@ -19,11 +18,7 @@ if (!isset($data['id'])) {
     exit;
 }
 
-$success = supprimerParId($pdo, 'formules', $data['id']);
+$stmt = $pdo->prepare("DELETE FROM formule WHERE id = ?");
+$success = $stmt->execute([$data['id']]);
 
-if ($success){
-    echo json_encode(['success' => true, 'message' => 'Formule supprimée avec succès']);
-} else {
-    echo json_encode(['success' => false, 'message' => 'Erreur lors de la suppression']);
-}
-
+echo json_encode(['success' => $success]);

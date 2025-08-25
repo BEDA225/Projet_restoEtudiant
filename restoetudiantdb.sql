@@ -92,20 +92,21 @@ INSERT INTO `restaurateurs` (`utilisateur_id`, `cuisine`, `code_restaurateur`) V
 -- Table structure for table `formule`
 --
 
-CREATE TABLE IF NOT EXISTS formule (
+CREATE TABLE IF NOT EXISTS formules (
     id INT AUTO_INCREMENT PRIMARY KEY,
     utilisateur_id INT NOT NULL,
     nom VARCHAR(100) NOT NULL,
     description TEXT,
     prix DECIMAL(6,2) NOT NULL,
     duree ENUM('1 semaine','2 semaines','1 mois') NOT NULL,
+    image VARCHAR(255) DEFAULT NULL,
     date_ajout TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (utilisateur_id) REFERENCES utilisateur(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 -- --------------------------------------------------------
 -- Table structure for table `plat`
 
-CREATE TABLE IF NOT EXISTS plat (
+CREATE TABLE IF NOT EXISTS plats (
     id INT NOT NULL AUTO_INCREMENT,
     utilisateur_id INT NOT NULL,
     nom VARCHAR(100) NOT NULL,
@@ -124,7 +125,7 @@ CREATE TABLE IF NOT EXISTS plat (
 
 -- Table structure for table `formule_plat`
 
-CREATE TABLE IF NOT EXISTS formule_plat (
+CREATE TABLE IF NOT EXISTS formules_plats (
     formule_id INT NOT NULL,
     plat_id INT NOT NULL,
     quantite INT DEFAULT 1,
@@ -133,9 +134,9 @@ CREATE TABLE IF NOT EXISTS formule_plat (
     FOREIGN KEY (plat_id) REFERENCES plat(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Table structure for table `commande`
+-- Table structure for table `commandes`
 
-CREATE TABLE IF NOT EXISTS commande (
+CREATE TABLE IF NOT EXISTS commandes (
     id INT NOT NULL AUTO_INCREMENT,
     utilisateur_id INT NOT NULL,
     date_commande TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
@@ -150,7 +151,7 @@ CREATE TABLE IF NOT EXISTS commande (
 -- Table structure for table `commande_formule`
 --
 
-CREATE TABLE IF NOT EXISTS commande_formule (
+CREATE TABLE IF NOT EXISTS commandes_formules (
     commande_id INT NOT NULL,
     formule_id INT NOT NULL,
     quantite INT DEFAULT '1',
@@ -160,3 +161,15 @@ CREATE TABLE IF NOT EXISTS commande_formule (
     CONSTRAINT fk_commande_formule_formule FOREIGN KEY (formule_id) REFERENCES formule(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+-- Table structure for table `commandes_plats`
+--
+
+CREATE TABLE IF NOT EXISTS commandes_plats (
+    commande_id INT NOT NULL,
+    plat_id INT NOT NULL,
+    quantite INT DEFAULT '1',
+    PRIMARY KEY (commande_id, plat_id),
+    KEY plat_id (plat_id),
+    CONSTRAINT fk_commande_plat_commande FOREIGN KEY (commande_id) REFERENCES commande(id),
+    CONSTRAINT fk_commande_plat_plat FOREIGN KEY (plat_id) REFERENCES plat(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

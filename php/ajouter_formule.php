@@ -5,6 +5,10 @@ if (!isset($_SESSION['utilisateur_id']) || $_SESSION['role'] !== 'Restaurateur')
     header("Location: /Projet_restoEtudiant/php/connexion.php");
     exit();
 }
+
+require_once './db_connect.php';
+$pdo = getPDO();
+
 ?>
 
 
@@ -45,10 +49,13 @@ if (!isset($_SESSION['utilisateur_id']) || $_SESSION['role'] !== 'Restaurateur')
             <label for="image">Ajouter une image :</label>
             <input type="file" name="image" id="image" accept="image/*">
 
-            <button type="submit">Ajouter la formule</button>
+            <button type="submit">Ajouter</button>
             <button type="reset">Réinitialiser</button>
         </form>
     </main>
 </body>
+<footer>
+    <p>&copy; <?php echo date("Y"); ?> Projet Resto Etudiant</p>
+</footer>
 
 </html>
