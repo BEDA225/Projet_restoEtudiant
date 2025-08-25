@@ -130,8 +130,8 @@ CREATE TABLE IF NOT EXISTS formules_plats (
     plat_id INT NOT NULL,
     quantite INT DEFAULT 1,
     PRIMARY KEY (formule_id, plat_id),
-    FOREIGN KEY (formule_id) REFERENCES formule(id),
-    FOREIGN KEY (plat_id) REFERENCES plat(id)
+    FOREIGN KEY (formule_id) REFERENCES formules(id),
+    FOREIGN KEY (plat_id) REFERENCES plats(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Table structure for table `commandes`
@@ -157,8 +157,8 @@ CREATE TABLE IF NOT EXISTS commandes_formules (
     quantite INT DEFAULT '1',
     PRIMARY KEY (commande_id, formule_id),
     KEY formule_id (formule_id),
-    CONSTRAINT fk_commande_formule_commande FOREIGN KEY (commande_id) REFERENCES commande(id),
-    CONSTRAINT fk_commande_formule_formule FOREIGN KEY (formule_id) REFERENCES formule(id)
+    CONSTRAINT fk_commande_formule_commande FOREIGN KEY (commande_id) REFERENCES commandes(id),
+    CONSTRAINT fk_commande_formule_formule FOREIGN KEY (formule_id) REFERENCES formules(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Table structure for table `commandes_plats`
@@ -170,6 +170,6 @@ CREATE TABLE IF NOT EXISTS commandes_plats (
     quantite INT DEFAULT '1',
     PRIMARY KEY (commande_id, plat_id),
     KEY plat_id (plat_id),
-    CONSTRAINT fk_commande_plat_commande FOREIGN KEY (commande_id) REFERENCES commande(id),
-    CONSTRAINT fk_commande_plat_plat FOREIGN KEY (plat_id) REFERENCES plat(id)
+    CONSTRAINT fk_commande_plat_commande FOREIGN KEY (commande_id) REFERENCES commandes(id),
+    CONSTRAINT fk_commande_plat_plat FOREIGN KEY (plat_id) REFERENCES plats(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
